@@ -4,9 +4,11 @@ Simple addressbook app, made as assignment for GIG Frontend. Assignment can be f
 
 ## Software dependencies
 
-- [react-router-dom](https://reactrouter.com/en/main) - Used for routing.
-- [styled-components](https://styled-components.com/) - Used for styling.
-- @types/styled-components - Typescript support for styled-components.
+- [react-router-dom](https://reactrouter.com/en/main) - Used for routing
+- [styled-components](https://styled-components.com/) - Used for styling
+- @types/styled-components - Typescript support for styled-components
+- country-list - Used as options for country select
+- @types/country-list - Typescript support for country-list
 
 ## Installation
 

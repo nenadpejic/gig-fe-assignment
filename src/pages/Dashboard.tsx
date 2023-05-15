@@ -1,16 +1,18 @@
-import { useRef } from 'react'
+import { useMemo, useRef } from 'react'
 import styled from 'styled-components'
 import ContactsList from '../components/ContactsList'
 import contacts from '../example-contacts-data.json'
+import { getData } from 'country-list'
 
 const Dashboard = () => {
   const dialogRef = useRef<HTMLDialogElement | null>(null)
+  const countryList = useMemo(() => getData(), [])
 
   return (
     <>
       <h2>Dashboard</h2>
 
-      <Heading>Add new contact</Heading>
+      <FormName>Add new contact</FormName>
       <Form>
         <label htmlFor="fistname">First Name</label>
         <input id="fistname" name="fistname" type="text" />
@@ -24,14 +26,17 @@ const Dashboard = () => {
         <label htmlFor="country">Country</label>
         <select id="country" name="country">
           <option value="">--Select Country--</option>
-          <option value="IS">Iceland</option>
-          <option value="TW">Taiwan</option>
+          {countryList.map(({ code, name }) => (
+            <option key={code} value={code}>
+              {name}
+            </option>
+          ))}
         </select>
 
         <button type="submit">Add</button>
       </Form>
 
-      <Heading>Query contacts</Heading>
+      <FormName>Query contacts</FormName>
       <Form>
         <label htmlFor="fistname">First Name</label>
         <input id="fistname" name="fistname" type="text" />
@@ -69,8 +74,11 @@ const Dashboard = () => {
           <label htmlFor="country">Country</label>
           <select id="country" name="country">
             <option value="">--Select Country--</option>
-            <option value="IS">Iceland</option>
-            <option value="TW">Taiwan</option>
+            {countryList.map(({ code, name }) => (
+              <option key={code} value={code}>
+                {name}
+              </option>
+            ))}
           </select>
 
           <button type="submit">Edit</button>
@@ -85,7 +93,7 @@ const Dashboard = () => {
 
 export default Dashboard
 
-const Heading = styled.h3`
+const FormName = styled.h3`
   margin-top: ${({ theme }) => theme.space.m};
 `
 
