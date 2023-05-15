@@ -9,6 +9,8 @@ Simple addressbook app, made as assignment for GIG Frontend. Assignment can be f
 - @types/styled-components - Typescript support for styled-components
 - country-list - Used as options for country select
 - @types/country-list - Typescript support for country-list
+- localforage - Used to persist state
+- nanoid - Used for id generation
 
 ## Installation
 

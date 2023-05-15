@@ -1,17 +1,11 @@
 import React from 'react'
 import styled from 'styled-components'
-
-type Contact = {
-  firstName: string
-  lastName: string
-  email: string
-  country: string
-}
+import { Contact } from '../lib/localforage'
 
 type ContactsListProps = {
   contacts: Contact[]
-  onEdit?: () => void
-  onDelete?: () => void
+  onEdit?: (contact: Contact) => void
+  onDelete?: (id: string) => void
 }
 
 const ContactsList = ({
@@ -22,25 +16,32 @@ const ContactsList = ({
 }: ContactsListProps) => {
   return (
     <List {...rest}>
-      {contacts.map((contact, i) => (
-        <React.Fragment key={i}>
-          {!!i && <hr />}
+      {contacts.map((contact, i) => {
+        const { country, email, firstName, id, lastName } = contact
 
-          <li>
-            <p>
-              {contact.firstName} {contact.lastName}, {contact.email},{' '}
-              {contact.country}
-            </p>
+        return (
+          <React.Fragment key={id}>
+            {!!i && <hr />}
 
-            {(onEdit || onDelete) && (
-              <span>
-                {onEdit && <button onClick={onEdit}>Edit</button>}
-                {onDelete && <button onClick={onDelete}>Delete</button>}
-              </span>
-            )}
-          </li>
-        </React.Fragment>
-      ))}
+            <li>
+              <p>
+                {firstName} {lastName}, {email}, {country}
+              </p>
+
+              {(onEdit || onDelete) && (
+                <span>
+                  {onEdit && (
+                    <button onClick={() => onEdit(contact)}>Edit</button>
+                  )}
+                  {onDelete && (
+                    <button onClick={() => onDelete(id)}>Delete</button>
+                  )}
+                </span>
+              )}
+            </li>
+          </React.Fragment>
+        )
+      })}
     </List>
   )
 }
