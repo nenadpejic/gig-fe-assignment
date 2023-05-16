@@ -19,8 +19,9 @@ const BasicForm = ({
   onSubmit,
   ...props
 }: BasicFormProps) => {
+  console.log(onSubmit)
   return (
-    <StyledFormikForm as={as} {...(onSubmit ? { onSubmit } : {})} {...props}>
+    <StyledForm as={as} {...(onSubmit && { onSubmit })} {...props}>
       {name && <h3>{name}</h3>}
 
       {children}
@@ -30,15 +31,13 @@ const BasicForm = ({
           {submitLabel}
         </button>
       )}
-    </StyledFormikForm>
+    </StyledForm>
   )
 }
 
 export default BasicForm
 
-const StyledFormikForm = styled.form`
-  max-width: 400px;
-
+const StyledForm = styled.form`
   button {
     display: block;
     width: 100%;

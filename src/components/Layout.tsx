@@ -31,5 +31,7 @@ const NavigationList = styled.ul`
   padding: ${({ theme }) => theme.space.l};
 `
 const Container = styled.div`
-  padding: ${({ theme }) => theme.space.m} ${({ theme }) => theme.space.l};
+  margin: auto;
+  max-width: 400px;
+  padding: ${({ theme }) => theme.space.m};
 `

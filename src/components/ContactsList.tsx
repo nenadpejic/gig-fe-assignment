@@ -15,15 +15,15 @@ const ContactsList = ({
   ...rest
 }: ContactsListProps) => {
   return (
-    <List {...rest}>
+    <ul {...rest}>
       {contacts.map((contact, i) => {
         const { country, email, firstName, id, lastName } = contact
 
         return (
           <React.Fragment key={id}>
-            {!!i && <hr />}
+            {!!i && <Divider />}
 
-            <li>
+            <ListItem>
               <p>
                 {firstName} {lastName}, {email}, {country}
               </p>
@@ -38,34 +38,29 @@ const ContactsList = ({
                   )}
                 </span>
               )}
-            </li>
+            </ListItem>
           </React.Fragment>
         )
       })}
-    </List>
+    </ul>
   )
 }
 
 export default ContactsList
 
-const List = styled.ul`
-  max-width: 400px;
+const Divider = styled.hr`
+  margin: ${({ theme }) => theme.space.xs} 0;
+`
+const ListItem = styled.li`
+  display: flex;
+  justify-content: space-between;
 
-  hr {
-    margin: ${({ theme }) => theme.space.xs} 0;
-  }
-
-  li {
+  span {
     display: flex;
-    justify-content: space-between;
+    gap: ${({ theme }) => theme.space.xs};
 
-    span {
-      display: flex;
-      gap: ${({ theme }) => theme.space.xs};
-
-      button {
-        padding: ${({ theme }) => theme.space.xs};
-      }
+    button {
+      padding: ${({ theme }) => theme.space.xs};
     }
   }
 `
