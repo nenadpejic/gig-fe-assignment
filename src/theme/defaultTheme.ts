@@ -5,6 +5,14 @@ declare module 'styled-components' {
 }
 
 const defaultTheme = {
+  colors: {
+    error: '#fc8181',
+  },
+  fontSizes: {
+    s: '0.75rem',
+    m: '1rem',
+    l: '1.5rem',
+  },
   space: {
     xs: '0.25rem',
     s: '0.5rem',

@@ -1,7 +1,13 @@
 import { getData } from 'country-list'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { FormikHelpers, FormikValues, useFormik } from 'formik'
+import { useEffect, useMemo, useState } from 'react'
 import styled from 'styled-components'
 import ContactsList from '../components/ContactsList'
+import Dialog from '../components/Dialog'
+import BasicField from '../components/Form/BasicField'
+import BasicForm from '../components/Form/BasicForm'
+import FormikField from '../components/Form/FormikField'
+import FormikForm from '../components/Form/FormikForm'
 import {
   Contact,
   NewContact,
@@ -11,18 +17,46 @@ import {
   getAllContacts,
   queryContacts,
 } from '../lib/localforage'
+import { addNewContactSchema } from '../lib/yup'
 
 const Dashboard = () => {
-  const dialogRef = useRef<HTMLDialogElement | null>(null)
   const countryList = useMemo(() => getData(), [])
   const [query, setQuery] = useState<string>('')
   const [queriedContacts, setQueriedContacts] = useState<Contact[]>([])
-  const [editContactFormData, setEditContactFormData] = useState<Contact>({
-    country: '',
-    email: '',
-    firstName: '',
-    id: '',
-    lastName: '',
+
+  const {
+    values,
+    errors,
+    touched,
+    isSubmitting,
+    handleChange,
+    handleBlur,
+    handleSubmit,
+    resetForm,
+    setValues,
+  } = useFormik({
+    initialValues: {
+      id: '',
+      firstName: '',
+      lastName: '',
+      email: '',
+      country: '',
+    },
+    validationSchema: addNewContactSchema,
+    onSubmit: async (values, actions) => {
+      try {
+        const editedContact = await editContact(values)
+        setQueriedContacts((prev) =>
+          prev.map((contact) =>
+            contact.id === editedContact.id ? editedContact : contact,
+          ),
+        )
+      } catch (err) {
+        console.error(err)
+      }
+
+      actions.resetForm()
+    },
   })
 
   useEffect(() => {
@@ -34,31 +68,19 @@ const Dashboard = () => {
       .catch((err) => console.error(err))
   }, [])
 
-  const handleSubmitAddNewContact = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-
-    const newContact = [...e.currentTarget.elements].reduce<NewContact>(
-      (data, element) => {
-        if (
-          (element instanceof HTMLInputElement ||
-            element instanceof HTMLSelectElement) &&
-          element.name
-        ) {
-          const { name, value } = element
-          return { ...data, [name]: value }
-        }
-        return data
-      },
-      { firstName: '', lastName: '', email: '', country: '' },
-    )
-
-    addContact(newContact)
-      .then((addedContact) => {
-        if (!addedContact.firstName.toLowerCase().includes(query.toLowerCase()))
-          return
-        setQueriedContacts((prev) => [...prev, addedContact])
-      })
-      .catch((err) => console.error(err))
+  const handleSubmitAddNewContact = async (
+    values: FormikValues,
+    actions: FormikHelpers<FormikValues>,
+  ) => {
+    try {
+      const addedContact = await addContact(values as NewContact)
+      if (!addedContact.firstName.toLowerCase().includes(query.toLowerCase()))
+        return
+      setQueriedContacts((prev) => [...prev, addedContact])
+    } catch (err) {
+      console.error(err)
+    }
+    actions.resetForm()
   }
 
   const handleChangeFirstNameQuery = (value: string) => {
@@ -80,76 +102,66 @@ const Dashboard = () => {
   }
 
   const handleEditContact = (contact: Contact) => {
-    setEditContactFormData(contact)
-    dialogRef.current?.showModal()
-  }
-
-  const handleSubmitEditContact = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-
-    editContact(editContactFormData)
-      .then((editedContact) => {
-        setQueriedContacts((prev) =>
-          prev.map((contact) =>
-            contact.id === editedContact.id ? editedContact : contact,
-          ),
-        )
-        dialogRef.current?.close()
-      })
-      .catch((err) => console.error(err))
-  }
-
-  const handleChangeEditContactForm = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
-  ) => {
-    const { name, value } = e.target
-    setEditContactFormData((p) => {
-      return {
-        ...p,
-        [name]: value,
-      }
-    })
+    setValues(contact)
   }
 
   return (
     <>
       <h2>Dashboard</h2>
 
-      <FormName>Add new contact</FormName>
-      <Form onSubmit={handleSubmitAddNewContact}>
-        <label htmlFor="firstName">First Name</label>
-        <input id="firstName" name="firstName" type="text" />
+      <StyledAddContactForm
+        name="Add Contact"
+        submitLabel="Add"
+        initialValues={{
+          firstName: '',
+          lastName: '',
+          email: '',
+          country: '',
+        }}
+        validationSchema={addNewContactSchema}
+        onSubmit={handleSubmitAddNewContact}
+      >
+        <FormikField
+          label="First Name"
+          name="firstName"
+          placeholder="Enter your first name"
+          type="text"
+        />
 
-        <label htmlFor="lastName">Last Name</label>
-        <input id="lastName" name="lastName" type="text" />
+        <FormikField
+          label="Last Name"
+          name="lastName"
+          placeholder="Enter your last name"
+          type="text"
+        />
 
-        <label htmlFor="email">Email</label>
-        <input id="email" name="email" type="text" />
+        <FormikField
+          label="Email"
+          name="email"
+          placeholder="Enter your email"
+          type="text"
+        />
 
-        <label htmlFor="country">Country</label>
-        <select id="country" name="country">
+        <FormikField as="select" label="Country" name="country">
           <option value="">--Select Country--</option>
           {countryList.map(({ code, name }) => (
             <option key={code} value={code}>
               {name}
             </option>
           ))}
-        </select>
+        </FormikField>
+      </StyledAddContactForm>
 
-        <button type="submit">Add</button>
-      </Form>
-
-      <FormName>Query contacts</FormName>
-      <Form>
-        <label htmlFor="firstName">First Name</label>
-        <input
-          id="firstName"
-          name="firstName"
+      <StyledQueryContactsForm name="Query Contacts">
+        <BasicField
+          label="First Name"
+          name="query"
+          placeholder="Query by first name"
           type="text"
           value={query}
           onChange={(e) => handleChangeFirstNameQuery(e.target.value)}
         />
-      </Form>
+      </StyledQueryContactsForm>
 
       <StyledContactsList
         contacts={queriedContacts}
@@ -157,42 +169,53 @@ const Dashboard = () => {
         onDelete={(id) => handleDeleteContact(id)}
       />
 
-      <Dialog ref={dialogRef}>
-        <h3>Edit contact</h3>
-        <Form onSubmit={handleSubmitEditContact}>
-          <label htmlFor="firstName">First Name</label>
-          <input
-            id="firstName"
+      <Dialog isOpen={!!values.id}>
+        <BasicForm
+          name="Edit Contact"
+          isSubmitting={isSubmitting}
+          onSubmit={handleSubmit}
+        >
+          <BasicField
+            label="First Name"
             name="firstName"
+            placeholder="Enter your first name"
             type="text"
-            value={editContactFormData?.firstName}
-            onChange={handleChangeEditContactForm}
+            value={values.firstName}
+            meta={{ error: errors.firstName, touched: touched.firstName }}
+            onChange={handleChange}
+            onBlur={handleBlur}
           />
 
-          <label htmlFor="lastName">Last Name</label>
-          <input
-            id="lastName"
+          <BasicField
+            label="Last Name"
             name="lastName"
+            placeholder="Enter your last name"
             type="text"
-            value={editContactFormData?.lastName}
-            onChange={handleChangeEditContactForm}
+            value={values.lastName}
+            meta={{ error: errors.lastName, touched: touched.lastName }}
+            onChange={handleChange}
+            onBlur={handleBlur}
           />
 
-          <label htmlFor="email">Email</label>
-          <input
-            id="email"
+          <BasicField
+            label="Email"
             name="email"
+            placeholder="Enter your email"
             type="text"
-            value={editContactFormData?.email}
-            onChange={handleChangeEditContactForm}
+            value={values.email}
+            meta={{ error: errors.email, touched: touched.email }}
+            onChange={handleChange}
+            onBlur={handleBlur}
           />
 
-          <label htmlFor="country">Country</label>
-          <select
-            id="country"
+          <BasicField
+            as="select"
+            label="Country"
             name="country"
-            value={editContactFormData?.country}
-            onChange={handleChangeEditContactForm}
+            value={values.country}
+            meta={{ error: errors.country, touched: touched.country }}
+            onChange={handleChange}
+            onBlur={handleBlur}
           >
             <option value="">--Select Country--</option>
             {countryList.map(({ code, name }) => (
@@ -200,13 +223,17 @@ const Dashboard = () => {
                 {name}
               </option>
             ))}
-          </select>
+          </BasicField>
 
-          <button type="submit">Edit</button>
-          <button type="button" onClick={() => dialogRef.current?.close()}>
+          <button
+            type="button"
+            onClick={() => {
+              resetForm()
+            }}
+          >
             Close
           </button>
-        </Form>
+        </BasicForm>
       </Dialog>
     </>
   )
@@ -214,37 +241,14 @@ const Dashboard = () => {
 
 export default Dashboard
 
-const FormName = styled.h3`
+const StyledAddContactForm = styled(FormikForm)`
   margin-top: ${({ theme }) => theme.space.m};
 `
 
-const Form = styled.form`
-  margin-top: ${({ theme }) => theme.space.s};
-  max-width: 400px;
-
-  label {
-    display: block;
-    margin-top: ${({ theme }) => theme.space.s};
-  }
-  input,
-  select {
-    display: block;
-    width: 100%;
-    padding: ${({ theme }) => theme.space.s};
-  }
-  button {
-    display: block;
-    width: 100%;
-    padding: ${({ theme }) => theme.space.xs};
-    margin-top: ${({ theme }) => theme.space.s};
-  }
+const StyledQueryContactsForm = styled(BasicForm)`
+  margin-top: ${({ theme }) => theme.space.m};
 `
 
 const StyledContactsList = styled(ContactsList)`
   margin-top: ${({ theme }) => theme.space.s};
-`
-
-const Dialog = styled.dialog`
-  margin: auto;
-  padding: ${({ theme }) => theme.space.m};
 `
